@@ -1,0 +1,12 @@
+docker compose up -d
+
+
+Migrations 
+docker-compose exec api alembic init alembic
+
+Criando tabela de Users
+docker-compose exec api alembic revision --autogenerate -m "create users table" 
+docker-compose exec api alembic upgrade head
+
+Fluxo
+ROTA  →  SERVICE  →  REPOSITORY  →  BANCO
