@@ -36,9 +36,19 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 
     return user
 
-def require_access_token(token_data: dict):
+def require_access_token(token_data: dict): 
     if token_data.get("type") != "access":
         raise HTTPException(
             status_code = status.HTTP_401_UNAUTHORIZED,
             detail = "Invalid token type"
         )
+
+
+def require_admin(user: User = Depends(get_current_user)) -> User:
+    if user.role != "admin":
+        raise HTTPException(
+            status_code = status.HTTP_403_FORBIDDEN,
+            detail = "Admin access required"
+        )
+
+    return user

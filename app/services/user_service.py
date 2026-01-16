@@ -19,9 +19,9 @@ def register_user(db: Session, user: UserCreate) -> User:
     new_user = User(
         name=user.name,
         email=user.email,
-        password=hash_password(user.password)
+        password=hash_password(user.password), 
+        role = "user"
     )
 
     return create_user(db, new_user)
 
-    

@@ -9,6 +9,7 @@ class UserCreate(UserBase):
 
 class UserResponse(UserBase):
     id: int 
+    role: str
 
     class Config:
         from_attributes = True
@@ -17,6 +18,7 @@ class UserPublic(BaseModel):
     id: int
     name: str
     email: EmailStr
+    role: str
 
     class Config:
         from_attributes = True
