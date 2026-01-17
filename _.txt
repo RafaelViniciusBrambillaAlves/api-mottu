@@ -10,3 +10,21 @@ docker-compose exec api alembic upgrade head
 
 Fluxo
 ROTA  →  SERVICE  →  REPOSITORY  →  BANCO
+
+
+
+{
+  "name": "João da Silva",
+  "email": "joao.silva@example.com",
+  "password": "123456",
+  "cnpj": "12.345.678/0001-90",
+  "birthday": "1990-05-20",
+  "cnh_number": "12345678901",
+  "cnh_type": "B"
+}
+
+{
+  "model": "BMW G 310 R",
+  "year": 2019,
+  "vin": "BMW-1056"
+}

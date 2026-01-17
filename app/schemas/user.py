@@ -1,3 +1,4 @@
+from datetime import date
 from pydantic import BaseModel, EmailStr, Field
 
 class UserBase(BaseModel):
@@ -6,6 +7,14 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str = Field(..., min_length = 6)
+
+    cnpj: str = Field(..., min_length = 14, max_length = 20)
+    birthday: date
+    cnh_number: str = Field(..., min_length = 5, max_length = 20)
+    cnh_type: str = Field(..., min_length = 1, max_length = 5)
+    
+class AdminCreate(UserBase):
+    password: str = Field(..., min_length=6)
 
 class UserResponse(UserBase):
     id: int 

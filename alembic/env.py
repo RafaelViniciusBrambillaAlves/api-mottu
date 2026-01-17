@@ -6,8 +6,9 @@ from sqlalchemy import pool
 from alembic import context
 
 from app.database import Base  # Import the Base from your database module
-from app.models.user import User  # Import all your models here to ensure they are registered with Base
+from app.models import *  # Import all your models here to ensure they are registered with Base
 
+target_metadata = Base.metadata
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config

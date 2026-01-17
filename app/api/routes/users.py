@@ -15,3 +15,4 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
         message = "User created successfully.",
         data = UserResponse.model_validate(created_user, from_attributes = True)
     )
+
