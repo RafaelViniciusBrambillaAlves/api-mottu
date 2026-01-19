@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
 from app.models.motorcycle import Motorcycle
+from sqlalchemy import exists
+from app.models.rental import Rental
 
 def create_motorcycle(db: Session, motorcycle: Motorcycle) -> Motorcycle:
     db.add(motorcycle)
@@ -16,3 +18,9 @@ def update_motorcycle(db: Session, motorcycle: Motorcycle, new_vin: str) -> Moto
     db.refresh(motorcycle)
     return motorcycle
 
+def geta_available_motorcycle(db: Session) -> list[Motorcycle]:
+    return db.query(Motorcycle).filter(~exists().where(
+                                                        (Rental.motorcycle_id == Motorcycle.id) &
+                                                        (Rental.status == "active")
+                                                    )).all()
+    

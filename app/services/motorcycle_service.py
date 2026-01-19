@@ -2,7 +2,7 @@ from fastapi import status
 from sqlalchemy.orm import Session
 from app.schemas.motocycle import MotorcycleCreate
 from app.models.motorcycle import Motorcycle
-from app.repositories.motorcycle_repository import create_motorcycle, get_motorcycle_by_vin, update_motorcycle
+from app.repositories.motorcycle_repository import create_motorcycle, get_motorcycle_by_vin, update_motorcycle, geta_available_motorcycle
 from app.core.exceptions import AppException
 from datetime import datetime
 import re
@@ -65,7 +65,6 @@ def list_motorcycles_service(db: Session) -> list[Motorcycle]:
 
 
 def get_motorcycle_by_vin_service(db: Session, vin: str) -> Motorcycle:
-
     return _validate_exist_motorcycle(db, vin)
    
 
@@ -90,3 +89,15 @@ def update_motorcycle_vin_service(db: Session, vin: str, new_vin: str) -> Motorc
     _validate_vin(db, new_vin)
 
     return update_motorcycle(db, motorcycle, new_vin)
+
+def list_available_motorcycles_service(db: Session) -> list[Motorcycle]:
+    motorcycles = geta_available_motorcycle(db)
+
+    if not motorcycles:
+        raise AppException(
+            error = "NO_AVAILABLE_MOTORCYCLES", 
+            message = "There are no available motorcycles at the moment.",
+            status_code = status.HTTP_404_NOT_FOUND
+        )
+    
+    return motorcycles
