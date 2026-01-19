@@ -14,7 +14,22 @@ router = APIRouter(prefix = "/rentals", tags = ["rentals"])
 @router.post(
             "/", 
             status_code = status.HTTP_201_CREATED, 
-            response_model = SucessResponse[RentalResponse]
+            response_model = SucessResponse[RentalResponse],
+            summary="Create a rental",
+            description="""
+            Creates a new motorcycle rental for the authenticated user.
+
+            The rental will be created based on the selected rental plan,
+            start date, and motorcycle availability.
+
+            **Business rules applied:**
+            - User must be authenticated
+            - Motorcycle must exist and be available
+            - Rental plan must be valid
+            - Start date cannot be in the past
+
+            **Authorization:** Authenticated user required.
+            """
             )
 def create_rental(data: RentalCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     
@@ -28,7 +43,17 @@ def create_rental(data: RentalCreate, db: Session = Depends(get_db), current_use
 @router.get(
             "/",
             status_code = status.HTTP_200_OK,
-            response_model = SucessResponse[list[RentalResponse]]
+            response_model = SucessResponse[list[RentalResponse]],
+            summary="List all rentals",
+            description="""
+            Retrieves all rentals registered in the system.
+
+            This endpoint is intended for administrative and operational
+            purposes, providing visibility over all rentals regardless
+            of user or motorcycle.
+
+            **Authorization:** Admin required.
+            """
 )
 def list_all_rentals(db: Session = Depends(get_db), _: User = Depends(require_admin)):
     rentals = list_all_rentals(db)
@@ -41,7 +66,19 @@ def list_all_rentals(db: Session = Depends(get_db), _: User = Depends(require_ad
 @router.get(
             "/motorcycle/{motorcycle_id}",
             status_code = status.HTTP_200_OK,
-            response_model = SucessResponse[list[RentalResponse]]
+            response_model = SucessResponse[list[RentalResponse]],
+            summary="List rentals by motorcycle",
+            description="""
+            Retrieves all rentals associated with a specific motorcycle.
+
+            This endpoint allows administrators to track the rental history
+            of a motorcycle.
+
+            **Path parameters:**
+            - **motorcycle_id**: Unique identifier of the motorcycle.
+
+            **Authorization:** Admin required.
+            """
 )
 def list_rentals_by_motorcycle(motorcycle_id: int, db: Session = Depends(get_db), _: User = Depends(require_admin)):
     rentals = list_rentals_by_motorcycle_service(db, motorcycle_id)
@@ -54,8 +91,17 @@ def list_rentals_by_motorcycle(motorcycle_id: int, db: Session = Depends(get_db)
 @router.get(
             "/me",
             status_code = status.HTTP_200_OK,
-            response_model = SucessResponse[list[RentalResponse]]
-            )
+            response_model = SucessResponse[list[RentalResponse]],
+            summary="List my rentals",
+            description="""
+            Retrieves all rentals associated with the authenticated user.
+
+            This endpoint returns both active and completed rentals,
+            allowing users to view their rental history.
+
+            **Authorization:** Authenticated user required.
+            """
+)
 def list_my_rentals(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     rentals = list_user_rentals_service(db, current_user.id)
 

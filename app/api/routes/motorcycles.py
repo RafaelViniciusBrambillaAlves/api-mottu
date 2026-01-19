@@ -12,7 +12,16 @@ router = APIRouter(prefix = "/motorcycles", tags = ["motorcycles"])
 @router.post(
             "/", 
             status_code = status.HTTP_201_CREATED, 
-            response_model = SucessResponse[MotorcycleResponse]
+            response_model = SucessResponse[MotorcycleResponse],
+            summary = "Create a Motorcycle",
+            description = """
+            Creates a new motorcycle in the system.
+
+            This endpoint is restricted to **administrators only**.
+            The motorcycle will be registered using the provided VIN and metadata.
+
+            **Authorization:** Admin required.
+            """
              )
 def create_motorcycle(motorcycle: MotorcycleCreate, db: Session = Depends(get_db), current_admin: User = Depends(require_admin)):
     
@@ -26,7 +35,16 @@ def create_motorcycle(motorcycle: MotorcycleCreate, db: Session = Depends(get_db
 @router.get(
             "/", 
             status_code = status.HTTP_200_OK, 
-            response_model = SucessResponse[list[MotorcycleResponse]]
+            response_model = SucessResponse[list[MotorcycleResponse]],
+            summary = "List all Motorcycles",
+            description = """
+            Retrieves a list of all motorcycles registered in the system.
+
+            This endpoint is restricted to **administrators only** and returns
+            both available and rented motorcycles.
+
+            **Authorization:** Admin required.
+            """
             )
 def get_motorcycles(db: Session = Depends(get_db), _: User = Depends(require_admin)):
 
@@ -39,8 +57,19 @@ def get_motorcycles(db: Session = Depends(get_db), _: User = Depends(require_adm
 
 @router.get(
             "/available",
+            status_code = status.HTTP_200_OK,
             response_model = SucessResponse[list[MotorcycleCreate]],
-            status_code = status.HTTP_200_OK
+            summary = "List Available Motorcycles",
+            description = """
+            Retrieves a list of motorcycles that are currently **available for rental**.
+
+            Only motorcycles that are **not associated with an active rental**
+            will be returned.
+
+            This endpoint is accessible to **authenticated users**.
+
+            **Authorization:** Authenticated user required.
+            """     
 )
 def list_available_motorcycles(db: Session = Depends(get_db), _: User = Depends(get_current_user)):
     motorcycles = list_available_motorcycles_service(db)
@@ -53,7 +82,18 @@ def list_available_motorcycles(db: Session = Depends(get_db), _: User = Depends(
 @router.get(
             '/{vin}', 
             status_code = status.HTTP_200_OK, 
-            response_model = SucessResponse[MotorcycleResponse]
+            response_model = SucessResponse[MotorcycleResponse],
+            summary = "Get Motorcycle by VIN",
+            description = """
+            Retrieves detailed information about a motorcycle using its VIN.
+
+            This endpoint is restricted to **administrators only**.
+
+            **Path parameters:**
+            - **vin**: Vehicle Identification Number of the motorcycle.
+
+            **Authorization:** Admin required.
+            """
             )
 def get_motorcycles_by_vin(vin: str, db: Session = Depends(get_db), _: User = Depends(require_admin)):
     
@@ -65,9 +105,21 @@ def get_motorcycles_by_vin(vin: str, db: Session = Depends(get_db), _: User = De
     )
 
 @router.patch(
-              '/{vin}', 
-              status_code = status.HTTP_200_OK, 
-              response_model = SucessResponse[MotorcycleResponse]
+            '/{vin}', 
+            status_code = status.HTTP_200_OK, 
+            response_model = SucessResponse[MotorcycleResponse],
+            summary = "Update Motorcycle VIN",
+            description = """
+            Updates the VIN of an existing motorcycle.
+
+            This endpoint allows administrators to correct or update
+            the VIN associated with a motorcycle.
+
+            **Path parameters:**
+            - **vin**: Current VIN of the motorcycle.
+
+            **Authorization:** Admin required.
+            """
               )
 def update_motorcycle_vin(vin: str, payload: MotorcycleUpdate, db: Session = Depends(get_db), _: User = Depends(require_admin)):
 
