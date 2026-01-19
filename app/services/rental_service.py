@@ -9,9 +9,10 @@ from app.models.user import User
 from app.models.motorcycle import Motorcycle
 from datetime import date
 from app.core.exceptions import AppException
+from app.repositories.user_repository import get_user_by_id
 
 def _validate_user(db: Session, user_id: int) -> None:
-    exists = db.query(User.id).filter(User.id == user_id).first()
+    exists = get_user_by_id(db, user_id)
 
     if not exists:
         raise AppException(
@@ -69,13 +70,46 @@ def _validate_dates_against_plan(start_date: date, expected_end_date: date, plan
             status_code = status.HTTP_400_BAD_REQUEST
         )
 
+def _validate_user_has_motorcycle_license(db: Session, user_id) -> None:
+    user = get_user_by_id(db, user_id)
+    
+    if not user:
+        raise AppException(
+            error = "USER_NOT_FOUND",
+            message = "User not found.",
+            status_code = status.HTTP_404_NOT_FOUND
+        )
 
+    if not user.cnh_type:
+        raise AppException(
+            error = "CNH_NOT_INFORMED",
+            message = "User does not have a driver's license registered.",
+            status_code = status.HTTP_400_BAD_REQUEST
+        )
+    
+    if "A" not in user.cnh_type:
+        raise AppException(
+            error = "INVALID_CNH_TYPE",
+            message = "User does not have a valid motorcycle driver's license (CNH A).",
+            status_code = status.HTTP_403_FORBIDDEN
+        )
+    
+def _validate_end_date_on_creation(end_date):
+    if end_date is not None:
+        raise AppException(
+            error = "END_DATE_NOT_ALLOWED",
+            message = "End date cannot be set when creating a rental.",
+            status_code = status.HTTP_400_BAD_REQUEST
+        )
 
 def register_rental(db: Session, user_id: int, data):
+
     _validate_user(db, user_id)
     _validate_motorcycle(db, data.motorcycle_id)
     _validate_motorcycle_availability(db, data.motorcycle_id)
     _validate_start_date(data.start_date)
+    _validate_user_has_motorcycle_license(db, user_id)
+    _validate_end_date_on_creation(data.end_date)
 
     plan = _validate_plan(db, data.plan_days)
 
@@ -86,7 +120,7 @@ def register_rental(db: Session, user_id: int, data):
         motorcycle_id = data.motorcycle_id,
         start_date = data.start_date,
         expected_end_date = data.expected_end_date,
-        end_date=data.end_date,
+        end_date = None,
         status = "active"
     )
 

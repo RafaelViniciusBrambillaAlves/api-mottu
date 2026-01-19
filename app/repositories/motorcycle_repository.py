@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from app.models.motorcycle import Motorcycle
 from sqlalchemy import exists
 from app.models.rental import Rental
+from typing import Optional
 
 def create_motorcycle(db: Session, motorcycle: Motorcycle) -> Motorcycle:
     db.add(motorcycle)
@@ -18,9 +19,17 @@ def update_motorcycle(db: Session, motorcycle: Motorcycle, new_vin: str) -> Moto
     db.refresh(motorcycle)
     return motorcycle
 
-def geta_available_motorcycle(db: Session) -> list[Motorcycle]:
+def get_available_motorcycle(db: Session) -> list[Motorcycle]:
     return db.query(Motorcycle).filter(~exists().where(
                                                         (Rental.motorcycle_id == Motorcycle.id) &
                                                         (Rental.status == "active")
                                                     )).all()
+
+def get_motorcycle_by_id(db: Session, motorcycle_id: int) -> Optional[Motorcycle]: 
+    return db.query(Motorcycle).filter(Motorcycle.id == motorcycle_id).first()
+
+def delete_motorcycle(db: Session, motorcycle: Motorcycle) -> None:
+    db.delete(motorcycle)
+    db.commit()
+
     

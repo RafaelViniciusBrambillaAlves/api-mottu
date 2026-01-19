@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.models.user import User
 from app.schemas.motocycle import MotorcycleResponse, MotorcycleCreate, MotorcycleUpdate
-from app.services.motorcycle_service import register_motorcycle, list_motorcycles_service, get_motorcycle_by_vin_service, update_motorcycle_vin_service, list_available_motorcycles_service
+from app.services.motorcycle_service import (register_motorcycle, list_motorcycles_service, get_motorcycle_by_vin_service, 
+                                             update_motorcycle_vin_service, list_available_motorcycles_service, delete_motorcycle_service)
 from app.schemas.response import SucessResponse
 
 router = APIRouter(prefix = "/motorcycles", tags = ["motorcycles"]) 
@@ -105,28 +106,54 @@ def get_motorcycles_by_vin(vin: str, db: Session = Depends(get_db), _: User = De
     )
 
 @router.patch(
-            '/{vin}', 
+            '/{motorcycle_id}', 
             status_code = status.HTTP_200_OK, 
             response_model = SucessResponse[MotorcycleResponse],
             summary = "Update Motorcycle VIN",
             description = """
-            Updates the VIN of an existing motorcycle.
+            Updates the VIN of an existing motorcycle using its ID.
 
-            This endpoint allows administrators to correct or update
-            the VIN associated with a motorcycle.
+            This endpoint allows administrators to update the VIN
+            associated with a motorcycle.
 
             **Path parameters:**
-            - **vin**: Current VIN of the motorcycle.
+            - **motorcycle_id**: Unique identifier of the motorcycle
 
             **Authorization:** Admin required.
             """
               )
-def update_motorcycle_vin(vin: str, payload: MotorcycleUpdate, db: Session = Depends(get_db), _: User = Depends(require_admin)):
+def update_motorcycle_vin(motorcycle_id: int, payload: MotorcycleUpdate, db: Session = Depends(get_db), _: User = Depends(require_admin)):
 
-    motorcyle = update_motorcycle_vin_service(db = db, vin = vin, new_vin = payload.vin)
+    motorcyle = update_motorcycle_vin_service(db, motorcycle_id, payload.vin)
 
     return SucessResponse(
         message = "Motorcycle VIN updated successfully.",
         data = MotorcycleResponse.model_validate(motorcyle, from_attributes=True)
     )
 
+@router.delete(
+                "/{motorcycle_id}",
+                status_code = status.HTTP_200_OK,
+                response_model = SucessResponse[None],
+                summary = "Delete a motorcycle",
+                description = """
+                Removes a motorcycle from the system.
+
+                **Business rules:**
+                - Motorcycle must exist
+                - Motorcycle must NOT have any rental records
+                - Only administrators can perform this action
+
+                **Path parameters:**
+                - **motorcycle_id**: Unique identifier of the motorcycle
+
+                **Authorization:** Admin required.
+                """
+)
+def  delete_motorcycle(motorcycle_id: int, db: Session = Depends(get_db), _: User = Depends(require_admin)):
+    delete_motorcycle_service(db, motorcycle_id)
+
+    return SucessResponse(
+        message = "Motorcycle removed successfully.",
+        data = None 
+    )

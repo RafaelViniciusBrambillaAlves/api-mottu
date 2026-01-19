@@ -7,7 +7,6 @@ class RentalCreate(BaseModel):
     plan_days: int
     start_date: date
     expected_end_date: date
-    end_date: Optional[str] = Field(None)
 
 class RentalResponse(BaseModel):
     id: int 

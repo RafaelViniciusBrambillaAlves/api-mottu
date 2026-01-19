@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.schemas.user import UserCreate, AdminCreate
 from app.models.user import User
 from app.core.security import hash_password
-from app.repositories.user_repository import create_user, get_user_by_email, get_user_by_cnpj, get_user_by_cnh
+from app.repositories.user_repository import create_user, get_user_by_email, get_user_by_cnpj, get_user_by_cnh, get_user_by_id
 from app.core.exceptions import AppException
 
 def _validate_email(db: Session, email: str):

@@ -16,3 +16,5 @@ def get_user_by_cnpj(db: Session, cnpj: str) -> User:
 def get_user_by_cnh(db: Session, cnh_number: str) -> User:
     return db.query(User).filter(User.cnh_number == cnh_number).first()
 
+def get_user_by_id(db: Session, user_id: int) -> User:
+    return db.query(User).filter(User.id == user_id).first()

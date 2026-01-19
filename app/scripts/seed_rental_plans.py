@@ -3,7 +3,7 @@ from app.models.rental_plan import RentalPlan
 
 PLANS = [
     {"days": 7, "price_per_day": 30.00},
-    {"days": 15, "price_per_day": 28.00},
+    {"days": 15, "price_per_day": 28.00},   
     {"days": 30, "price_per_day": 22.00},
     {"days": 45, "price_per_day": 20.00},
     {"days": 50, "price_per_day": 18.00},
