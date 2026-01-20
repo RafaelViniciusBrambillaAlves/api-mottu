@@ -8,13 +8,17 @@ from app.schemas.response import SucessResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt
 from app.models.user import User
+from app.schemas.error import ErrorResponse
 
 router = APIRouter(prefix = "/auth", tags = ["auth"])
 
 @router.post(
             "/login", 
-            status_code = status.HTTP_200_OK
-            )
+            status_code = status.HTTP_200_OK,
+            summary = "Login with OAuth2",
+            responses = {
+                401: {"model": ErrorResponse, "description": "Invalid credentials"}
+            })
 def login_oath2(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
  
     _, tokens = AuthService.login(db, form_data.username, form_data.password)
@@ -26,8 +30,12 @@ def login_oath2(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
 
 @router.post(
             "/login/json", 
-            response_model = SucessResponse[LoginResponse]
-            )
+            response_model = SucessResponse[LoginResponse],
+            summary = "Login using JSON payload",
+            responses = {
+                401: {"model": ErrorResponse, "description": "Invalid credentials"},
+                404: {"model": ErrorResponse, "description": "User not found"},
+            })
 def login_json(data: LoginRequest, db: Session = Depends(get_db)):
     user, tokens =AuthService.login(db, data.email, data.password)
 
@@ -41,7 +49,10 @@ def login_json(data: LoginRequest, db: Session = Depends(get_db)):
 
 @router.post(
             "/refresh", 
-            status_code=status.HTTP_200_OK
-            )
+            status_code=status.HTTP_200_OK,
+            summary = "Refresh access token",
+            responses = {
+                401: {"model": ErrorResponse, "description": "Invalid or expired refresh token"}
+            })
 def refresh_token(token: str, db: Session = Depends(get_db)):
     return AuthService.refresh_token(db, token)

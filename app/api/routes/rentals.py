@@ -8,6 +8,7 @@ from app.core.auth import get_current_user
 from app.models.user import User
 from app.schemas.response import SucessResponse
 from app.core.auth import get_current_user, require_admin
+from app.schemas.error import ErrorResponse
 
 router = APIRouter(prefix = "/rentals", tags = ["rentals"])
 
@@ -15,8 +16,8 @@ router = APIRouter(prefix = "/rentals", tags = ["rentals"])
             "/", 
             status_code = status.HTTP_201_CREATED, 
             response_model = SucessResponse[RentalResponse],
-            summary="Create a rental",
-            description="""
+            summary = "Create a rental",
+            description = """
             Creates a new motorcycle rental for the authenticated user.
 
             The rental will be created based on the selected rental plan,
@@ -29,8 +30,13 @@ router = APIRouter(prefix = "/rentals", tags = ["rentals"])
             - Start date cannot be in the past
 
             **Authorization:** Authenticated user required.
-            """
-            )
+            """,
+            responses={
+                401: {"model": ErrorResponse, "description": "Not authenticated"},
+                404: {"model": ErrorResponse, "description": "Motorcycle or rental plan not found"},
+                409: {"model": ErrorResponse, "description": "Motorcycle unavailable or invalid rental state"},
+                422: {"model": ErrorResponse, "description": "Validation error"},
+            })
 def create_rental(data: RentalCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     
     created_rental = RentalService.register(db, current_user.id, data)
@@ -44,8 +50,8 @@ def create_rental(data: RentalCreate, db: Session = Depends(get_db), current_use
             "/",
             status_code = status.HTTP_200_OK,
             response_model = SucessResponse[list[RentalResponse]],
-            summary="List all rentals",
-            description="""
+            summary = "List all rentals",
+            description = """
             Retrieves all rentals registered in the system.
 
             This endpoint is intended for administrative and operational
@@ -53,8 +59,10 @@ def create_rental(data: RentalCreate, db: Session = Depends(get_db), current_use
             of user or motorcycle.
 
             **Authorization:** Admin required.
-            """
-)
+            """,
+            responses = {
+                403: {"model": ErrorResponse, "description": "Admin access required"},
+            })
 def list_all_rentals(db: Session = Depends(get_db), _: User = Depends(require_admin)):
     rentals = RentalService.list_all(db)
 
@@ -67,8 +75,8 @@ def list_all_rentals(db: Session = Depends(get_db), _: User = Depends(require_ad
             "/motorcycle/{motorcycle_id}",
             status_code = status.HTTP_200_OK,
             response_model = SucessResponse[list[RentalResponse]],
-            summary="List rentals by motorcycle",
-            description="""
+            summary = "List rentals by motorcycle",
+            description = """
             Retrieves all rentals associated with a specific motorcycle.
 
             This endpoint allows administrators to track the rental history
@@ -78,8 +86,11 @@ def list_all_rentals(db: Session = Depends(get_db), _: User = Depends(require_ad
             - **motorcycle_id**: Unique identifier of the motorcycle.
 
             **Authorization:** Admin required.
-            """
-)
+            """,
+            responses = {
+                403: {"model": ErrorResponse, "description": "Admin access required"},
+                404: {"model": ErrorResponse, "description": "Motorcycle not found"},
+            })
 def list_rentals_by_motorcycle(motorcycle_id: int, db: Session = Depends(get_db), _: User = Depends(require_admin)):
     rentals = RentalService.list_by_motorcycle(db, motorcycle_id)
 
@@ -92,16 +103,18 @@ def list_rentals_by_motorcycle(motorcycle_id: int, db: Session = Depends(get_db)
             "/me",
             status_code = status.HTTP_200_OK,
             response_model = SucessResponse[list[RentalResponse]],
-            summary="List my rentals",
-            description="""
+            summary = "List my rentals",
+            description = """
             Retrieves all rentals associated with the authenticated user.
 
             This endpoint returns both active and completed rentals,
             allowing users to view their rental history.
 
             **Authorization:** Authenticated user required.
-            """
-)
+            """,
+            responses = {
+                401: {"model": ErrorResponse, "description": "Not authenticated"},
+            })
 def list_my_rentals(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     rentals = RentalService.list_by_user(db, current_user.id)
 
@@ -114,8 +127,8 @@ def list_my_rentals(db: Session = Depends(get_db), current_user: User = Depends(
             "/{rental_id}/return",
             status_code = status.HTTP_200_OK, 
             response_model = SucessResponse[RentalReturnResponse],
-            summary="Calculate rental return amount",
-            description="""
+            summary = "Calculate rental return amount",
+            description = """
             Calculates the total rental amount based on the return date.
 
             **Rules applied:**
@@ -124,8 +137,14 @@ def list_my_rentals(db: Session = Depends(get_db), current_user: User = Depends(
             - Exact return date charges only base amount
 
             **Authorization:** Authenticated user required.
-            """
-)
+            """,
+            responses = {
+                401: {"model": ErrorResponse, "description": "Not authenticated"},
+                403: {"model": ErrorResponse, "description": "Rental does not belong to user"},
+                404: {"model": ErrorResponse, "description": "Rental not found"},
+                409: {"model": ErrorResponse, "description": "Rental already returned"},
+                422: {"model": ErrorResponse, "description": "Validation error"},
+            })
 def calculate_return(rental_id: int, data: RentalReturnRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     result = RentalService.return_rental(db, rental_id, current_user.id, data.return_date)
 

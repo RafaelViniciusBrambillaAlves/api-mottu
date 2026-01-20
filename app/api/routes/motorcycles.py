@@ -6,6 +6,7 @@ from app.models.user import User
 from app.schemas.motorcycle import MotorcycleResponse, MotorcycleCreate, MotorcycleUpdate
 from app.services.motorcycle_service import MotorcycleService
 from app.schemas.response import SucessResponse
+from app.schemas.error import ErrorResponse
 
 router = APIRouter(prefix = "/motorcycles", tags = ["motorcycles"]) 
 
@@ -21,8 +22,12 @@ router = APIRouter(prefix = "/motorcycles", tags = ["motorcycles"])
             The motorcycle will be registered using the provided VIN and metadata.
 
             **Authorization:** Admin required.
-            """
-             )
+            """, 
+            responses = {
+                403: {"model": ErrorResponse, "description": "Admin access required"},
+                409: {"model": ErrorResponse, "description": "VIN already exists"},
+                422: {"model": ErrorResponse, "description": "Validation error"},
+            })
 def create_motorcycle(payload: MotorcycleCreate, db: Session = Depends(get_db), _: User = Depends(require_admin)):
     
     motorcycle = MotorcycleService.register(db, payload)
@@ -44,8 +49,10 @@ def create_motorcycle(payload: MotorcycleCreate, db: Session = Depends(get_db), 
             both available and rented motorcycles.
 
             **Authorization:** Admin required.
-            """
-            )
+            """,
+            responses = {
+                403: {"model": ErrorResponse, "description": "Admin access required"},
+            })
 def get_motorcycles(db: Session = Depends(get_db), _: User = Depends(require_admin)):
 
     motorcycles = MotorcycleService.list_all(db)
@@ -58,7 +65,7 @@ def get_motorcycles(db: Session = Depends(get_db), _: User = Depends(require_adm
 @router.get(
             "/available",
             status_code = status.HTTP_200_OK,
-            response_model = SucessResponse[list[MotorcycleCreate]],
+            response_model = SucessResponse[list[MotorcycleResponse]],
             summary = "List Available Motorcycles",
             description = """
             Retrieves a list of motorcycles that are currently **available for rental**.
@@ -69,8 +76,11 @@ def get_motorcycles(db: Session = Depends(get_db), _: User = Depends(require_adm
             This endpoint is accessible to **authenticated users**.
 
             **Authorization:** Authenticated user required.
-            """     
-)
+            """,
+            responses = {
+                401: {"model": ErrorResponse, "description": "Not authenticated"},
+                403: {"model": ErrorResponse, "description": "Invalid credentials"},
+            })
 def list_available_motorcycles(db: Session = Depends(get_db), _: User = Depends(get_current_user)):
     motorcycles = MotorcycleService.list_available(db)
 
@@ -93,8 +103,11 @@ def list_available_motorcycles(db: Session = Depends(get_db), _: User = Depends(
             - **vin**: Vehicle Identification Number of the motorcycle.
 
             **Authorization:** Admin required.
-            """
-            )
+            """,
+            responses = {
+                403: {"model": ErrorResponse, "description": "Admin access required"},
+                404: {"model": ErrorResponse, "description": "Motorcycle not found"},
+            })
 def get_motorcycles_by_vin(vin: str, db: Session = Depends(get_db), _: User = Depends(require_admin)):
     
     motorcycle = MotorcycleService.get_by_vin(db, vin)
@@ -119,36 +132,44 @@ def get_motorcycles_by_vin(vin: str, db: Session = Depends(get_db), _: User = De
             - **motorcycle_id**: Unique identifier of the motorcycle
 
             **Authorization:** Admin required.
-            """
-              )
+            """,
+            responses = {
+                403: {"model": ErrorResponse, "description": "Admin access required"},
+                404: {"model": ErrorResponse, "description": "Motorcycle not found"},
+                409: {"model": ErrorResponse, "description": "VIN already exists"},
+            })
 def update_motorcycle_vin(motorcycle_id: int, payload: MotorcycleUpdate, db: Session = Depends(get_db), _: User = Depends(require_admin)):
 
-    motorcyle = MotorcycleService.update_vin(db, motorcycle_id, payload.vin)
+    motorcycle = MotorcycleService.update_vin(db, motorcycle_id, payload.vin)
 
     return SucessResponse(
         message = "Motorcycle VIN updated successfully.",
-        data = MotorcycleResponse.model_validate(motorcyle)
+        data = MotorcycleResponse.model_validate(motorcycle)
     )
 
 @router.delete(
-                "/{motorcycle_id}",
-                status_code = status.HTTP_200_OK,
-                response_model = SucessResponse[None],
-                summary = "Delete a motorcycle",
-                description = """
-                Removes a motorcycle from the system.
+               "/{motorcycle_id}",
+               status_code = status.HTTP_200_OK,
+               response_model = SucessResponse[None],
+               summary = "Delete a motorcycle",
+               description = """
+               Removes a motorcycle from the system.
 
-                **Business rules:**
-                - Motorcycle must exist
-                - Motorcycle must NOT have any rental records
-                - Only administrators can perform this action
+               **Business rules:**
+               - Motorcycle must exist
+               - Motorcycle must NOT have any rental records
+              - Only administrators can perform this action
 
-                **Path parameters:**
-                - **motorcycle_id**: Unique identifier of the motorcycle
+               **Path parameters:**
+               - **motorcycle_id**: Unique identifier of the motorcycle
 
-                **Authorization:** Admin required.
-                """
-)
+               **Authorization:** Admin required.
+               """,
+               responses = {
+                403: {"model": ErrorResponse, "description": "Admin access required"},
+                404: {"model": ErrorResponse, "description": "Motorcycle not found"},
+                409: {"model": ErrorResponse, "description": "Motorcycle has rental records"},
+            })
 def  delete_motorcycle(motorcycle_id: int, db: Session = Depends(get_db), _: User = Depends(require_admin)):
     MotorcycleService.delete(db, motorcycle_id)
 

@@ -16,8 +16,7 @@ router = APIRouter(prefix = "/users", tags = ["users"])
             400: {"model": ErrorResponse, "description": "Invalid data"}, 
             409: {"model": ErrorResponse, "description": "User already exists"},
             500: {"model": ErrorResponse, "description": "Internal server error"}
-            }
-        )
+        })
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
     created_user = UserService.register_user(db, user)
 
