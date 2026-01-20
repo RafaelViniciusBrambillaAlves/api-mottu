@@ -5,7 +5,11 @@ from app.api.routes import users, admin, auth, test, motorcycles, rentals
 from app.core.exceptions import AppException
 from app.core.exception_handlers import app_exception_handler, validation_exception_handler, generic_exception_handler
 
-app = FastAPI()
+app = FastAPI(
+    title="Mottu API",
+    version="1.0.0",
+    description="API for motorcycle rentals",
+)
 
 app.include_router(users.router)
 app.include_router(admin.router)

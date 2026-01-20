@@ -10,16 +10,13 @@ PLANS = [
 ]
 
 def seed():
-    db = SessionLocal()
-
-    for plan in PLANS:
-        exits = db.query(RentalPlan).filter_by(days = plan["days"]).first()
-
-        if not exits:
-            db.add(RentalPlan(**plan))
+    with SessionLocal() as db:
+        for plan in PLANS:
+            exits = db.query(RentalPlan).filter_by(days = plan["days"]).first()
+            if not exits:
+                db.add(RentalPlan(**plan))
     
-    db.commit()
-    db.close()
+        db.commit()
 
 if __name__ == "__main__":
     seed()

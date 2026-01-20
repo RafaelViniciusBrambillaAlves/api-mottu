@@ -3,24 +3,61 @@ from fastapi import HTTPException, status
 
 from app.models.user import User
 from app.core.security import verify_password
-from app.core.jwt import create_access_token, create_refresh_token
+from app.core.jwt import create_access_token, create_refresh_token, decode_token
 from app.core.exceptions import AppException
+from app.repositories.user_repository import UserRepository
+from app.schemas.auth import TokenResponse, LoginResponse
 
-def login_user(db: Session, email: str, password: str):
-    user = db.query(User).filter(User.email == email).first()
+class AuthService:
 
-    if not user or not verify_password(password, user.password):
-        raise HTTPException(
-            status_code = status.HTTP_401_UNAUTHORIZED,
-            detail = "Email or password is incorrect",
+    @staticmethod
+    def login(db: Session, email: str, password: str) -> LoginResponse:
+        user = UserRepository.get_by_email(db, email)
+        if not user or not verify_password(password, user.password):
+            raise AppException(
+                error = "INVALID_CREDENTIALS",
+                message = "Email or password is incorrect.",
+                status_code = status.HTTP_401_UNAUTHORIZED
+
+            )
+        
+        tokens = TokenResponse(
+            access_token = create_access_token(user.id, user.role),
+            refresh_token = create_refresh_token(user.id)
         )
+
+        return LoginResponse(user, tokens)
     
-    access_token = create_access_token(user.id, user.role)
-    refresh_token = create_refresh_token(user.id)
+    @staticmethod
+    def refresh_token(db: Session, refresh_token: str):
+        try:
+            payload = decode_token(refresh_token)
+        
+        except:
+            raise AppException(
+                error = "INVALID_TOKEN", 
+                message = "Invalid refresh token",
+                status_code = status.HTTP_401_UNAUTHORIZED
+            )
 
-    tokens = {
-        "access_token": access_token,
-        "refresh_token": refresh_token
-    }
+        if payload.type != "refresh":
+            raise AppException(
+                error = "INVALID_TOKEN_TYPE", 
+                message = "User not found.", 
+                status_code = status.HTTP_401_UNAUTHORIZED
+            )
+        
+        user = UserRepository.get_by_id(db, int(payload.sub))
 
-    return user, tokens
+        if not user:
+            raise AppException(
+                error = "USER_NOT_FOUND", 
+                message = "User not found", 
+                status_code = status.HTTP_401_UNAUTHORIZED 
+            )
+        
+        return {
+            "access_token": create_access_token(user.id, user.role),
+            "token_type": "bearer"
+        }
+    

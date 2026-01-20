@@ -1,22 +1,39 @@
 from sqlalchemy.orm import Session
 from app.models.rental import Rental
-from app.models.rental_plan import RentalPlan
 from typing import Optional
 
-def create_rental(db: Session, rental: Rental):
-    db.add(rental)
-    db.commit()
-    db.refresh(rental)
-    return rental
+class RentalRepository:
 
-def get_rental_by_id(db: Session, rental_id: int) -> Optional[Rental]:
-    return db.query(Rental).filter(Rental.id == rental_id).first()
+    @staticmethod
+    def create(db: Session, rental: Rental) -> Rental:
+        db.add(rental)
+        db.commit()
+        db.refresh(rental)
+        return rental
 
-def get_plan_by_days(db: Session, plan_days: int):
-    return db.query(RentalPlan).filter(RentalPlan.days == plan_days).first()
+    @staticmethod
+    def get_by_id(db: Session, rental_id: int) -> Optional[Rental]:
+        return db.query(Rental).filter(Rental.id == rental_id).first()
 
-def finished_rental(db: Session, rental: Rental) -> Rental:
-    db.add(rental)
-    db.commit()
-    db.refresh(rental)
-    return rental
+    @staticmethod
+    def list_all(db: Session) -> list[Rental]:
+        return db.query(Rental).all()
+    
+    @staticmethod
+    def list_by_motorcycle(db: Session, motorcycle_id: int) -> list[Rental]:
+        return db.query(Rental).filter(Rental.motorcycle_id == motorcycle_id).all()
+    
+    @staticmethod
+    def list_by_user(db: Session, user_id: int) -> list[Rental]:
+        return db.query(Rental).filter(Rental.user_id == user_id).all()
+
+    @staticmethod
+    def has_active_rental(db: Session, motorcycle_id: int) -> Optional[Rental]:
+        return db.query(Rental).filter(Rental.motorcycle_id == motorcycle_id, Rental.status == "active").first()
+
+    @staticmethod
+    def finished(db: Session, rental: Rental) -> Rental:
+        db.add(rental)
+        db.commit()
+        db.refresh(rental)
+        return rental

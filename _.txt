@@ -28,3 +28,47 @@ ROTA  →  SERVICE  →  REPOSITORY  →  BANCO
   "year": 2019,
   "vin": "BMW-1056"
 }
+
+
+
+|_alembic
+|_app
+    |_api
+        |_routes
+        |_deps.py
+    |_core
+        |_auth.py
+        |_exception_handles.py
+        |_exceptions.py
+        |_jwt.py
+        |_security.py
+    |_models
+        |_ __init__.py
+        |_motorcycle.py
+        |_rental_plan.py
+        |_rental.py
+        |_user.py
+    |_repositories
+        |_motorcycle_repository.py
+        |_rental_repository.py
+        |_user_repository.py
+    |_schemas
+        |_auth.py
+        |_error.py
+        |_motorcycle.py
+        |_rental.py
+        |_response.py
+        |_user.py
+    |_scripts
+        |_seed_rental_plans.py
+    |_services
+        |_auth_service.py
+        |_motorcycle_service.py
+        |_rental_service.py
+        |_user_service.py
+    |_database.py
+    |_main.py
+|_.env
+|_docker-compose.yml
+|_Dockerfile
+|_requirements.txt

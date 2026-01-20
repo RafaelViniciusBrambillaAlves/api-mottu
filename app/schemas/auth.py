@@ -1,5 +1,4 @@
 from pydantic import BaseModel, EmailStr, Field
-
 from app.schemas.user import UserPublic
 
 class LoginRequest(BaseModel):

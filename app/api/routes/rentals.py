@@ -3,8 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.schemas.rental import RentalCreate, RentalResponse, RentalReturnRequest, RentalReturnResponse
-from app.services.rental_service import (register_rental, list_all_rentals_service, list_rentals_by_motorcycle_service, 
-                                        list_user_rentals_service, return_rental_service)
+from app.services.rental_service import RentalService
 from app.core.auth import get_current_user
 from app.models.user import User
 from app.schemas.response import SucessResponse
@@ -34,11 +33,11 @@ router = APIRouter(prefix = "/rentals", tags = ["rentals"])
             )
 def create_rental(data: RentalCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     
-    created_rental = register_rental(db, current_user.id, data)
+    created_rental = RentalService.register(db, current_user.id, data)
 
     return SucessResponse(
         message = "Rental created successfully.",
-        data = RentalResponse.model_validate(created_rental, from_attributes = True)
+        data = RentalResponse.model_validate(created_rental)
     )
 
 @router.get(
@@ -57,11 +56,11 @@ def create_rental(data: RentalCreate, db: Session = Depends(get_db), current_use
             """
 )
 def list_all_rentals(db: Session = Depends(get_db), _: User = Depends(require_admin)):
-    rentals = list_all_rentals(db)
+    rentals = RentalService.list_all(db)
 
     return SucessResponse(
-        message="All rentals retrieved successfully.",
-        data=rentals
+        message = "All rentals retrieved successfully.",
+        data = [RentalResponse.model_validate(r) for r in rentals]
     )
 
 @router.get(
@@ -82,11 +81,11 @@ def list_all_rentals(db: Session = Depends(get_db), _: User = Depends(require_ad
             """
 )
 def list_rentals_by_motorcycle(motorcycle_id: int, db: Session = Depends(get_db), _: User = Depends(require_admin)):
-    rentals = list_rentals_by_motorcycle_service(db, motorcycle_id)
+    rentals = RentalService.list_by_motorcycle(db, motorcycle_id)
 
     return SucessResponse(
         message = "Rentals for motorcycle retrieved successfully.",
-        data = rentals 
+        data = [RentalResponse.model_validate(r) for r in rentals]
     )
 
 @router.get(
@@ -104,11 +103,11 @@ def list_rentals_by_motorcycle(motorcycle_id: int, db: Session = Depends(get_db)
             """
 )
 def list_my_rentals(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    rentals = list_user_rentals_service(db, current_user.id)
+    rentals = RentalService.list_by_user(db, current_user.id)
 
     return SucessResponse(
         message = "User rentals retrieved successfully.",
-        data = rentals 
+        data = [RentalResponse.model_validate(r) for r in rentals]
     )
     
 @router.post(
@@ -128,9 +127,9 @@ def list_my_rentals(db: Session = Depends(get_db), current_user: User = Depends(
             """
 )
 def calculate_return(rental_id: int, data: RentalReturnRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    result = return_rental_service(db, rental_id, current_user.id, data.return_date)
+    result = RentalService.return_rental(db, rental_id, current_user.id, data.return_date)
 
     return SucessResponse(
         message = "Rental amount calculated successfully.",
-        data = result
+        data = RentalReturnResponse.model_validate(result)
     )

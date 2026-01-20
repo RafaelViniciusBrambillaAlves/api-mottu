@@ -9,11 +9,11 @@ class MotorcycleBase(BaseModel):
 class MotorcycleCreate(MotorcycleBase):
     pass
 
+class MotorcycleUpdate(BaseModel):
+    vin: str = Field(None, min_length=5, max_length=50)
+
 class MotorcycleResponse(MotorcycleBase):
     id: int
 
     class Config:
         from_attributes = True
-
-class MotorcycleUpdate(BaseModel):
-    vin: Optional[str] = Field(None, min_length=5, max_length=50)

@@ -3,9 +3,8 @@ from app.core.auth import require_admin, get_current_user
 from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.models.user import User
-from app.schemas.motocycle import MotorcycleResponse, MotorcycleCreate, MotorcycleUpdate
-from app.services.motorcycle_service import (register_motorcycle, list_motorcycles_service, get_motorcycle_by_vin_service, 
-                                             update_motorcycle_vin_service, list_available_motorcycles_service, delete_motorcycle_service)
+from app.schemas.motorcycle import MotorcycleResponse, MotorcycleCreate, MotorcycleUpdate
+from app.services.motorcycle_service import MotorcycleService
 from app.schemas.response import SucessResponse
 
 router = APIRouter(prefix = "/motorcycles", tags = ["motorcycles"]) 
@@ -24,13 +23,13 @@ router = APIRouter(prefix = "/motorcycles", tags = ["motorcycles"])
             **Authorization:** Admin required.
             """
              )
-def create_motorcycle(motorcycle: MotorcycleCreate, db: Session = Depends(get_db), current_admin: User = Depends(require_admin)):
+def create_motorcycle(payload: MotorcycleCreate, db: Session = Depends(get_db), _: User = Depends(require_admin)):
     
-    created_motorcycle  = register_motorcycle(db, motorcycle)
+    motorcycle = MotorcycleService.register(db, payload)
 
     return SucessResponse(
         message = "Motorcycle created successfully.",
-        data = MotorcycleResponse.model_validate(created_motorcycle, from_attributes=True)
+        data = MotorcycleResponse.model_validate(motorcycle)
     )
 
 @router.get(
@@ -49,11 +48,11 @@ def create_motorcycle(motorcycle: MotorcycleCreate, db: Session = Depends(get_db
             )
 def get_motorcycles(db: Session = Depends(get_db), _: User = Depends(require_admin)):
 
-    motorcycles = list_motorcycles_service(db)
+    motorcycles = MotorcycleService.list_all(db)
 
     return SucessResponse(
         message = "Motorcycles retrieved successfully.",
-        data = [MotorcycleResponse.model_validate(motorcycle, from_attributes=True) for motorcycle in motorcycles]
+        data = [MotorcycleResponse.model_validate(m) for m in motorcycles]
     )
 
 @router.get(
@@ -73,11 +72,11 @@ def get_motorcycles(db: Session = Depends(get_db), _: User = Depends(require_adm
             """     
 )
 def list_available_motorcycles(db: Session = Depends(get_db), _: User = Depends(get_current_user)):
-    motorcycles = list_available_motorcycles_service(db)
+    motorcycles = MotorcycleService.list_available(db)
 
     return SucessResponse(
         message = "Available motorcycles retrieved successfully.",
-        data = motorcycles
+        data = [MotorcycleResponse.model_validate(m) for m in motorcycles]
     )
 
 @router.get(
@@ -98,7 +97,7 @@ def list_available_motorcycles(db: Session = Depends(get_db), _: User = Depends(
             )
 def get_motorcycles_by_vin(vin: str, db: Session = Depends(get_db), _: User = Depends(require_admin)):
     
-    motorcycle = get_motorcycle_by_vin_service(db, vin)
+    motorcycle = MotorcycleService.get_by_vin(db, vin)
 
     return SucessResponse(
         message = "Motorcycle retrieved successfully.",
@@ -124,11 +123,11 @@ def get_motorcycles_by_vin(vin: str, db: Session = Depends(get_db), _: User = De
               )
 def update_motorcycle_vin(motorcycle_id: int, payload: MotorcycleUpdate, db: Session = Depends(get_db), _: User = Depends(require_admin)):
 
-    motorcyle = update_motorcycle_vin_service(db, motorcycle_id, payload.vin)
+    motorcyle = MotorcycleService.update_vin(db, motorcycle_id, payload.vin)
 
     return SucessResponse(
         message = "Motorcycle VIN updated successfully.",
-        data = MotorcycleResponse.model_validate(motorcyle, from_attributes=True)
+        data = MotorcycleResponse.model_validate(motorcyle)
     )
 
 @router.delete(
@@ -151,7 +150,7 @@ def update_motorcycle_vin(motorcycle_id: int, payload: MotorcycleUpdate, db: Ses
                 """
 )
 def  delete_motorcycle(motorcycle_id: int, db: Session = Depends(get_db), _: User = Depends(require_admin)):
-    delete_motorcycle_service(db, motorcycle_id)
+    MotorcycleService.delete(db, motorcycle_id)
 
     return SucessResponse(
         message = "Motorcycle removed successfully.",
