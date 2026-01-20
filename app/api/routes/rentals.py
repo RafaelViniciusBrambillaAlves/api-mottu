@@ -2,8 +2,9 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
-from app.schemas.rental import RentalCreate, RentalResponse
-from app.services.rental_service import register_rental, list_all_rentals_service, list_rentals_by_motorcycle_service, list_user_rentals_service
+from app.schemas.rental import RentalCreate, RentalResponse, RentalReturnRequest, RentalReturnResponse
+from app.services.rental_service import (register_rental, list_all_rentals_service, list_rentals_by_motorcycle_service, 
+                                        list_user_rentals_service, return_rental_service)
 from app.core.auth import get_current_user
 from app.models.user import User
 from app.schemas.response import SucessResponse
@@ -110,3 +111,26 @@ def list_my_rentals(db: Session = Depends(get_db), current_user: User = Depends(
         data = rentals 
     )
     
+@router.post(
+            "/{rental_id}/return",
+            status_code = status.HTTP_200_OK, 
+            response_model = SucessResponse[RentalReturnResponse],
+            summary="Calculate rental return amount",
+            description="""
+            Calculates the total rental amount based on the return date.
+
+            **Rules applied:**
+            - Early return may generate penalty
+            - Late return generates extra daily fee
+            - Exact return date charges only base amount
+
+            **Authorization:** Authenticated user required.
+            """
+)
+def calculate_return(rental_id: int, data: RentalReturnRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    result = return_rental_service(db, rental_id, current_user.id, data.return_date)
+
+    return SucessResponse(
+        message = "Rental amount calculated successfully.",
+        data = result
+    )

@@ -18,3 +18,17 @@ class RentalResponse(BaseModel):
 
     class Config: 
         from_attributes = True
+
+
+class RentalReturnRequest(BaseModel):
+    return_date: date
+
+class RentalReturnResponse(BaseModel):
+    rental_id: int
+    total_days: int
+    base_amount: float
+    penalty_amount: float
+    extra_amount: float
+    total_amount: float
+
+    

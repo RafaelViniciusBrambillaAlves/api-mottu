@@ -4,7 +4,8 @@ from fastapi import HTTPException, status
 
 from app.models.rental import Rental 
 from app.models.rental_plan import RentalPlan
-from app.repositories.rental_repository import create_rental
+from app.repositories.rental_repository import create_rental, get_rental_by_id, get_plan_by_days, finished_rental
+from app.repositories.motorcycle_repository import get_motorcycle_by_id
 from app.models.user import User
 from app.models.motorcycle import Motorcycle
 from datetime import date
@@ -33,9 +34,7 @@ def _validate_plan(db: Session, plan_days) -> RentalPlan:
     return plan
 
 def _validate_motorcycle(db: Session, motorcycle_id: int) -> None:
-    exists = db.query(Motorcycle.id).filter(Motorcycle.id == motorcycle_id).first()
-
-    if not exists:
+    if not get_motorcycle_by_id(db, motorcycle_id):
         raise AppException(
             error = "MOTORCYCLE_NOT_FOUND", 
             message = "Motorcycle not found.",
@@ -95,7 +94,7 @@ def _validate_user_has_motorcycle_license(db: Session, user_id) -> None:
         )
     
 def _validate_end_date_on_creation(end_date):
-    if end_date is not None:
+    if end_date not in (None, ""):
         raise AppException(
             error = "END_DATE_NOT_ALLOWED",
             message = "End date cannot be set when creating a rental.",
@@ -143,4 +142,88 @@ def list_rentals_by_motorcycle_service(db: Session, motorcycle_id: int) -> list[
 def list_user_rentals_service(db: Session, user_id: int) -> list[Rental]:
     return db.query(Rental).filter(Rental.user_id == user_id).all()
 
+def _validate_rental(db: Session, rental_id: int) -> Rental:
+    rental = get_rental_by_id(db, rental_id)
 
+    if not rental:
+        raise AppException(
+            error = "RENTAL_NOT_FOUND",
+            message = "Rental not found.",
+            status_code = status.HTTP_400_BAD_REQUEST
+        )
+    return rental
+
+def _validate_rental_ownership(rental: Rental, user_id: int) -> None:
+    if rental.user_id != user_id:
+        raise AppException(
+            error = "RENTAL_FORBIDDEN",
+            message = "You do not have permission to acess this rental.",
+            status_code = status.HTTP_403_FORBIDDEN
+        )
+
+def _validate_rental_plan(db: Session, plan_days: int) -> RentalPlan:
+    plan = get_plan_by_days(db, plan_days)
+
+    if not plan: 
+        raise AppException(
+            error = "RENTAL_PLAN_NOT_FOUND", 
+            message = "Rental plan not found.",
+            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+    return plan
+
+def return_rental_service(db: Session, rental_id: int, user_id:int, return_date: date):
+
+    rental = _validate_rental(db, rental_id)
+    _validate_rental_ownership(rental, user_id)
+
+    if rental.status != "active":
+        raise AppException(
+            error = "RENTAL_ALREADY_FINISHED", 
+            message = "Rental is already finished.",
+            status_code = status.HTTP_400_BAD_REQUEST
+        )
+    
+    plan_days = (rental.expected_end_date - rental.start_date).days
+    plan = _validate_rental_plan(db, plan_days)
+
+    price_per_day = float(plan.price_per_day)
+
+    user_days = max((return_date - rental.start_date).days, 0)
+    base_amount = plan_days * price_per_day
+
+    penalty_amount = 0.0
+    extra_amount = 0.0 
+
+    if return_date < rental.expected_end_date:
+        unused_days = plan_days - user_days
+        daily_amount_used = user_days * price_per_day
+
+        if plan_days == 7:
+            penalty_amount = unused_days * price_per_day * 0.20
+        elif plan_days == 15:
+            penalty_amount = unused_days * price_per_day * 0.40
+
+        total_amount = daily_amount_used + penalty_amount
+
+    elif return_date > rental.expected_end_date:
+        extra_days = (return_date - rental.expected_end_date).days
+        extra_amount = extra_days * 50.00
+        total_amount = base_amount + extra_amount
+
+    else:
+        total_amount = base_amount
+
+    rental.end_date = return_date
+    rental.status = "finished"
+
+    finished_rental(db, rental)
+
+    return {
+        "rental_id": rental.id,
+        "total_days": user_days,
+        "base_amount": round(base_amount, 2),
+        "penalty_amount": round(penalty_amount, 2),
+        "extra_amount": round(extra_amount, 2),
+        "total_amount": round(total_amount, 2)
+    }
