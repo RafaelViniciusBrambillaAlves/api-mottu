@@ -20,3 +20,5 @@ class User(Base):
 
     created_at = Column(DateTime(timezone = True), default = datetime.now(timezone.utc))
     updated_at = Column(DateTime(timezone = True), default = datetime.now(timezone.utc), onupdate = datetime.now(timezone.utc))
+
+    cnh_photo_path = Column(String, nullable = True)

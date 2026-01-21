@@ -26,3 +26,11 @@ class UserRepository:
     @staticmethod
     def get_by_id(db: Session, user_id: int) -> User:
         return db.query(User).filter(User.id == user_id).first()
+
+    @staticmethod
+    def update_cnh_photo(db: Session, user: User, photo_path: str) -> User:
+        user.cnh_photo_path = photo_path
+        db.commit()
+        db.refresh(user)
+        return user
+    

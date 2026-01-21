@@ -26,7 +26,7 @@ class AuthService:
             refresh_token = create_refresh_token(user.id)
         )
 
-        return LoginResponse(user, tokens)
+        return LoginResponse(user = user, tokens = tokens)
     
     @staticmethod
     def refresh_token(db: Session, refresh_token: str):
@@ -40,14 +40,14 @@ class AuthService:
                 status_code = status.HTTP_401_UNAUTHORIZED
             )
 
-        if payload.type != "refresh":
+        if payload.get("type") != "refresh":
             raise AppException(
                 error = "INVALID_TOKEN_TYPE", 
                 message = "User not found.", 
                 status_code = status.HTTP_401_UNAUTHORIZED
             )
         
-        user = UserRepository.get_by_id(db, int(payload.sub))
+        user = UserRepository.get_by_id(db, int(payload.get("sub")))
 
         if not user:
             raise AppException(
@@ -56,8 +56,8 @@ class AuthService:
                 status_code = status.HTTP_401_UNAUTHORIZED 
             )
         
-        return {
-            "access_token": create_access_token(user.id, user.role),
-            "token_type": "bearer"
-        }
+        return TokenResponse(
+            access_token = create_access_token(user.id, user.role),
+            refresh_token = refresh_token
+        )
     

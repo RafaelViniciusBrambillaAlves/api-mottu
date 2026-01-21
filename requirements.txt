@@ -9,3 +9,5 @@ bcrypt==4.0.1
 python-dotenv
 python-jose[cryptography]
 python-multipart
+minio==7.2.0
+pydantic-settings>=2.0

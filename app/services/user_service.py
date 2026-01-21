@@ -1,10 +1,11 @@
-from fastapi import status
+from fastapi import status, UploadFile
 from sqlalchemy.orm import Session
 from app.schemas.user import UserCreate, AdminCreate
 from app.models.user import User
 from app.core.security import hash_password
 from app.repositories.user_repository import UserRepository
 from app.core.exceptions import AppException
+from app.services.cnh_photo_service import CNHPhotoService
 
 VALID_CNH_TYPES = {"A", "B", "AB"}
 class UserService:
@@ -79,3 +80,11 @@ class UserService:
         )
 
         return UserRepository.create(db, new_admin)
+    
+    @staticmethod
+    def upload_cnh_photo(db: Session, user: User, file: UploadFile) -> User:
+        photo_path = CNHPhotoService.upload(user_id = user.id, file = file)
+
+        return UserRepository.update_cnh_photo(db, user, photo_path)
+    
+    

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.core.jwt import ALGORITHM, SECRET_KEY
-from app.schemas.auth import LoginRequest, LoginResponse, TokenResponse
+from app.schemas.auth import LoginRequest, LoginResponse, TokenResponse, RefreshTokenRequest
 from app.services.auth_service import AuthService
 from app.schemas.response import SucessResponse
 from fastapi.security import OAuth2PasswordRequestForm
@@ -14,18 +14,17 @@ router = APIRouter(prefix = "/auth", tags = ["auth"])
 
 @router.post(
             "/login", 
-            status_code = status.HTTP_200_OK,
             summary = "Login with OAuth2",
             responses = {
                 401: {"model": ErrorResponse, "description": "Invalid credentials"}
             })
 def login_oath2(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
  
-    _, tokens = AuthService.login(db, form_data.username, form_data.password)
+    result = AuthService.login(db, form_data.username, form_data.password)
 
     return {
-        "access_token": tokens["access_token"],
-        "token_type": "bearer"
+        "access_token": result.tokens.access_token,
+        "token_type": "bearer",
     }
 
 @router.post(
@@ -37,14 +36,11 @@ def login_oath2(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
                 404: {"model": ErrorResponse, "description": "User not found"},
             })
 def login_json(data: LoginRequest, db: Session = Depends(get_db)):
-    user, tokens =AuthService.login(db, data.email, data.password)
+    login_response = AuthService.login(db, data.email, data.password)
 
     return SucessResponse(
         message = "Login successful",
-        data = LoginResponse(
-            user= user,
-            tokens = TokenResponse(**tokens)
-        )
+        data = login_response
     )   
 
 @router.post(
@@ -54,5 +50,5 @@ def login_json(data: LoginRequest, db: Session = Depends(get_db)):
             responses = {
                 401: {"model": ErrorResponse, "description": "Invalid or expired refresh token"}
             })
-def refresh_token(token: str, db: Session = Depends(get_db)):
-    return AuthService.refresh_token(db, token)
+def refresh_token(data: RefreshTokenRequest, db: Session = Depends(get_db)):
+    return AuthService.refresh_token(db, data.refresh_token)

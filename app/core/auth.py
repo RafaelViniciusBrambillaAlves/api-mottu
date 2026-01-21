@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError
@@ -11,12 +11,10 @@ from app.repositories.user_repository import UserRepository
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl = "/auth/login")
 
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
-    
-    try:
-       payload = decode_token(token)
-       print(payload)
+def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)) -> User:
 
+    try:
+        payload = decode_token(token)
     except JWTError:
         raise AppException(
             error = "INVALID_TOKEN",
@@ -34,7 +32,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 
     if not user_id:
         raise AppException(
-            error="INVALID_TOKEN",
+            error="INVALID_TOKEN2",
             message="Invalid token payload.",
             status_code=status.HTTP_401_UNAUTHORIZED
         )
