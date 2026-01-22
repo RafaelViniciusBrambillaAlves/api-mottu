@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     MINIO_BUCKET: str
     MINIO_SECURE: bool = False
 
+    KAFKA_BOOTSTRAP_SERVERS: str
+
     model_config = SettingsConfigDict(
         env_file = ".env",
         extra = "forbid", 

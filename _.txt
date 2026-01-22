@@ -72,3 +72,11 @@ ROTA  →  SERVICE  →  REPOSITORY  →  BANCO
 |_docker-compose.yml
 |_Dockerfile
 |_requirements.txt
+
+
+docker exec -it kafka bash
+
+kafka-topics --bootstrap-server localhost:9092 --list
+motorcycle.created
+
+kafka-console-consumer --bootstrap-server localhost:9092 --topic motorcycle.created --from-beginning

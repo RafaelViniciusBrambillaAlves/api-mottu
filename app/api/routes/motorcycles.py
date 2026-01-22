@@ -28,13 +28,13 @@ router = APIRouter(prefix = "/motorcycles", tags = ["motorcycles"])
                 409: {"model": ErrorResponse, "description": "VIN already exists"},
                 422: {"model": ErrorResponse, "description": "Validation error"},
             })
-def create_motorcycle(payload: MotorcycleCreate, db: Session = Depends(get_db), _: User = Depends(require_admin)):
+async def create_motorcycle(payload: MotorcycleCreate, db: Session = Depends(get_db), _: User = Depends(require_admin)):
     
-    motorcycle = MotorcycleService.register(db, payload)
+    motorcycle = await MotorcycleService.register(db, payload)
 
     return SucessResponse(
-        message = "Motorcycle created successfully.",
-        data = MotorcycleResponse.model_validate(motorcycle)
+        message="Motorcycle created successfully.",
+        data=MotorcycleResponse.model_validate(motorcycle)
     )
 
 @router.get(

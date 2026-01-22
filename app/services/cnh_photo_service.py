@@ -10,7 +10,8 @@ class CNHPhotoService:
 
     @staticmethod
     def upload(user_id: int, file: UploadFile) -> str:
-        if file.content_type not in ("image/bmp", "image/png"):
+        if file.content_type not in("image/bmp", "image/png", "image/jpeg"):
+        # if file.content_type not in ("image/bmp", "image/png"):
             raise AppException(
                 error = "INVALID_IMAGE_FORMAT", 
                 message = "Invalid image format. Only PNG and BMP are allowed.",

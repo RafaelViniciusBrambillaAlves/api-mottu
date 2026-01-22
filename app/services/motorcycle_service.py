@@ -8,6 +8,9 @@ from datetime import datetime
 import re
 from app.models.rental import Rental
 
+from app.core.kafka import KafkaProducer
+from app.events.motorcycle_events import motorcycle_created_event
+
 VIN_REGEX = re.compile(r"^[A-Z]{3}-\d{4}$|^[A-Z]{3}\d[A-Z]\d{2}$")
 
 class MotorcycleService:
@@ -51,7 +54,7 @@ class MotorcycleService:
         return motorcycle
 
     @staticmethod
-    def register(db: Session, payload: MotorcycleCreate) -> Motorcycle:
+    async def register(db: Session, payload: MotorcycleCreate) -> Motorcycle:
 
         MotorcycleService._validate_vin_format(payload.vin)
         MotorcycleService._validate_unique_vin(db, payload.vin)
@@ -63,7 +66,14 @@ class MotorcycleService:
             vin = payload.vin
         )
 
-        return MotorcycleRepository.create(db, motorcycle)
+        motorcycle = MotorcycleRepository.create(db, motorcycle)
+
+        await KafkaProducer.send(
+            topic = "motorcycle.created",
+            message = motorcycle_created_event(motorcycle)
+        )
+
+        return motorcycle
 
     @staticmethod
     def list_all(db: Session):
