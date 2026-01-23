@@ -5,10 +5,21 @@ from app.api.routes import users, admin, auth, test, motorcycles, rentals
 from app.core.exceptions import AppException
 from app.core.exception_handlers import app_exception_handler, validation_exception_handler, generic_exception_handler
 from app.core.kafka import KafkaProducer
+from app.messaging.consumer import start_motorcycle_consumer
+from app.core.kafka_admin import ensure_kafka_topics
+from app.core.logging import setup_logging
 
 async def lifespan(app: FastAPI):
+
+    setup_logging()
+
+    await ensure_kafka_topics()
     await KafkaProducer.start()
+    
+    start_motorcycle_consumer()
+    
     yield
+    
     await KafkaProducer.stop()
 
 
@@ -31,9 +42,3 @@ app.include_router(rentals.router)
 app.add_exception_handler(AppException, app_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
-
-
-
-
-
-

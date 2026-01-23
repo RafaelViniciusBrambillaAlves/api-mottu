@@ -5,7 +5,6 @@ import os
 import asyncio
 
 class KafkaProducer:
-    _producer: Optional[AIOKafkaProducer] = None
 
     @classmethod
     async def start(cls, retries: int = 10, delay: int = 3):
@@ -16,14 +15,13 @@ class KafkaProducer:
                     value_serializer = lambda v: json.dumps(v).encode("utf-8")
                 )
                 await producer.start()
-                cls._producer = producer  # ✅ só seta depois de conectar
+                cls._producer = producer 
                 return
         
             except Exception as e:
                 if attempt == retries - 1:
                     raise 
                 await asyncio.sleep(delay)
-
 
     @classmethod
     async def stop(cls):

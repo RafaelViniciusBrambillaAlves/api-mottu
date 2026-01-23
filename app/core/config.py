@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     MINIO_SECURE: bool = False
 
     KAFKA_BOOTSTRAP_SERVERS: str
+    KAFKA_MOTORCYCLE_TOPIC: str
+    KAFKA_CONSUMER_GROUP: str
 
     model_config = SettingsConfigDict(
         env_file = ".env",
