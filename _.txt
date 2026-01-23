@@ -1,40 +1,23 @@
 docker compose up -d
 
 
-Migrations 
+Inicializar Migrations do alembic 
 docker-compose exec api alembic init alembic
 
 Criando tabela de Users
-docker-compose exec api alembic revision --autogenerate -m "create users table" 
+docker-compose exec api alembic revision --autogenerate -m "" 
 docker-compose exec api alembic upgrade head
-
-Fluxo
-ROTA  →  SERVICE  →  REPOSITORY  →  BANCO
-
-
-
-{
-  "name": "João da Silva",
-  "email": "joao.silva@example.com",
-  "password": "123456",
-  "cnpj": "12.345.678/0001-90",
-  "birthday": "1990-05-20",
-  "cnh_number": "12345678901",
-  "cnh_type": "B"
-}
-
-{
-  "model": "BMW G 310 R",
-  "year": 2019,
-  "vin": "BMW-1056"
-}
-
 
 
 |_alembic
 |_app
     |_api
         |_routes
+            |_admin.py
+            |_auth.py
+            |_motorcycles.py
+            |_rentals.py
+            |_users.py
         |_deps.py
     |_core
         |_auth.py
@@ -42,9 +25,21 @@ ROTA  →  SERVICE  →  REPOSITORY  →  BANCO
         |_exceptions.py
         |_jwt.py
         |_security.py
+        |_kafka_admin.py
+        |_kafka.py
+        |_logging.py
+        |_minio.py
+        |_startup.py
+        |_config.py
+    |_events
+        motorcycle_events.py
+    |_messaging
+        |_consumer.py
+        |_handlers.py
     |_models
         |_ __init__.py
         |_motorcycle.py
+        |_motorcycle_notifications.py
         |_rental_plan.py
         |_rental.py
         |_user.py
@@ -52,6 +47,7 @@ ROTA  →  SERVICE  →  REPOSITORY  →  BANCO
         |_motorcycle_repository.py
         |_rental_repository.py
         |_user_repository.py
+        |_rental_plan_repository.py
     |_schemas
         |_auth.py
         |_error.py
@@ -63,8 +59,10 @@ ROTA  →  SERVICE  →  REPOSITORY  →  BANCO
         |_seed_rental_plans.py
     |_services
         |_auth_service.py
+        |_cnh_photo_service.py
         |_motorcycle_service.py
         |_rental_service.py
+        |_rental_plan_service.py
         |_user_service.py
     |_database.py
     |_main.py
@@ -72,6 +70,8 @@ ROTA  →  SERVICE  →  REPOSITORY  →  BANCO
 |_docker-compose.yml
 |_Dockerfile
 |_requirements.txt
+|_alembic.ini
+
 
 
 docker exec -it kafka bash
