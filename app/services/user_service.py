@@ -87,4 +87,20 @@ class UserService:
 
         return UserRepository.update_cnh_photo(db, user, photo_path)
     
-    
+    @staticmethod
+    def create_admin_if_not_exists(db: Session) -> None:
+        admin_email  = "admin@example.com"
+
+        admin = UserRepository.get_by_email(db, admin_email)
+        if admin:
+            return 
+        
+        admin_user = User(
+            email = admin_email,
+            password = hash_password("123456"),
+            role = "ADMIN"
+        )
+
+        UserRepository.create(db, admin_user)
+
+        

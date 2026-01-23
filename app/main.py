@@ -8,6 +8,7 @@ from app.core.kafka import KafkaProducer
 from app.messaging.consumer import start_motorcycle_consumer
 from app.core.kafka_admin import ensure_kafka_topics
 from app.core.logging import setup_logging
+from app.core.startup import create_default_admin
 
 async def lifespan(app: FastAPI):
 
@@ -18,6 +19,8 @@ async def lifespan(app: FastAPI):
     
     start_motorcycle_consumer()
     
+    create_default_admin()
+
     yield
     
     await KafkaProducer.stop()
@@ -29,6 +32,7 @@ app = FastAPI(
     description="API for motorcycle rentals",
     lifespan = lifespan
 )
+
 
 app.include_router(users.router)
 app.include_router(admin.router)
