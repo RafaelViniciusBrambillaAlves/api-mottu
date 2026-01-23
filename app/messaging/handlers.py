@@ -1,4 +1,6 @@
 import logging
+from app.database import SessionLocal
+from app.models.motorcycle_notification import MotorcycleNotification
 
 logger = logging.getLogger("motorcycle_notifications")
 
@@ -14,3 +16,18 @@ def notify_motorcycle_2024(event: dict) -> None:
         event["motorcycle_id"],
         event["model"]
     )
+
+    db = SessionLocal()
+
+    try: 
+        notification = MotorcycleNotification(
+            motorcycle_id = event["motorcycle_id"],
+            model = event["model"],
+            year = event["year"],
+            vin = event["vin"]
+        )
+        db.add(notification)
+        db.commit()
+
+    finally:
+        db.close()
