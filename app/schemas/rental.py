@@ -1,6 +1,5 @@
 from datetime import date
 from pydantic import BaseModel, Field
-from typing import Optional
 
 class RentalCreate(BaseModel):
     motorcycle_id: int

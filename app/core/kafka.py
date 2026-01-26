@@ -1,5 +1,4 @@
 import json
-from typing import Optional
 from aiokafka import AIOKafkaProducer  
 import os
 import asyncio

@@ -1,7 +1,7 @@
-from fastapi import Body, FastAPI
+from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel
-from app.api.routes import users, admin, auth, test, motorcycles, rentals
+from app.api.routes import users, admin, auth, motorcycles, rentals, test
 from app.core.exceptions import AppException
 from app.core.exception_handlers import app_exception_handler, validation_exception_handler, generic_exception_handler
 from app.core.kafka import KafkaProducer
@@ -32,7 +32,6 @@ app = FastAPI(
     description="API for motorcycle rentals",
     lifespan = lifespan
 )
-
 
 app.include_router(users.router)
 app.include_router(admin.router)

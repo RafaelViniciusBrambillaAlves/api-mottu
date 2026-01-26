@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
-
 from app.api.deps import get_db
 from app.schemas.rental import RentalCreate, RentalResponse, RentalReturnRequest, RentalReturnResponse
 from app.services.rental_service import RentalService

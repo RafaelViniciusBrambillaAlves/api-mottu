@@ -3,11 +3,9 @@ from sqlalchemy.orm import Session
 from app.schemas.user import UserCreate, UserResponse
 from app.schemas.response import SucessResponse
 from app.services.user_service import UserService
-from app.services.cnh_photo_service import CNHPhotoService
 from app.api.deps import get_db
 from app.schemas.error import ErrorResponse
 from app.models.user import User
-from app.repositories.user_repository import UserRepository
 from app.core.auth import get_current_user
 
 router = APIRouter(prefix = "/users", tags = ["users"])

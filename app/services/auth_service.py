@@ -1,7 +1,5 @@
 from sqlalchemy.orm import Session 
-from fastapi import HTTPException, status
-
-from app.models.user import User
+from fastapi import status
 from app.core.security import verify_password
 from app.core.jwt import create_access_token, create_refresh_token, decode_token
 from app.core.exceptions import AppException

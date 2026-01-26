@@ -2,7 +2,6 @@ from sqlalchemy.orm import Session
 from fastapi import status
 from app.core.exceptions import AppException
 from app.models.rental import Rental 
-from app.models.rental_plan import RentalPlan
 from app.repositories.rental_plan_repository import RentalPlanRepository
 from app.services.rental_plan_service import RentalPlanService
 from app.repositories.rental_repository import RentalRepository

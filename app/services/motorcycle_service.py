@@ -2,12 +2,9 @@ from fastapi import status
 from sqlalchemy.orm import Session
 from app.schemas.motorcycle import MotorcycleCreate
 from app.models.motorcycle import Motorcycle
-from app.repositories.motorcycle_repository import MotorcycleRepository
 from app.core.exceptions import AppException
 from datetime import datetime
 import re
-from app.models.rental import Rental
-
 from app.core.kafka import KafkaProducer
 from app.events.motorcycle_events import motorcycle_created_event
 

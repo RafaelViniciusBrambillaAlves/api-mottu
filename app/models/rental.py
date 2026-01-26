@@ -1,5 +1,4 @@
 from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, String
-from sqlalchemy.sql import func
 from datetime import datetime, timezone
 
 from app.database import Base
